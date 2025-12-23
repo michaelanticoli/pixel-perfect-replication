@@ -1,29 +1,57 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { ZodiacWheel } from '@/components/ZodiacWheel';
 import { BirthDataForm } from '@/components/BirthDataForm';
 import { BottomNav } from '@/components/BottomNav';
 import { GeneratingState } from '@/components/GeneratingState';
+import { useCosmicReading } from '@/hooks/useCosmicReading';
+import { useToast } from '@/hooks/use-toast';
+import type { BirthData } from '@/types/astrology';
 
 type AppState = 'input' | 'generating' | 'result';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('input');
-  const [birthData, setBirthData] = useState<{
-    name: string;
-    date: string;
-    time: string;
-    location: string;
-  } | null>(null);
+  const { toast } = useToast();
+  const {
+    loading,
+    error,
+    reading,
+    chartData,
+    audioUrl,
+    progress,
+    stage,
+    generateReading,
+    reset,
+  } = useCosmicReading();
 
-  const handleFormSubmit = (data: typeof birthData) => {
-    setBirthData(data);
+  const handleFormSubmit = async (data: BirthData) => {
     setAppState('generating');
+    
+    try {
+      await generateReading(data);
+      setAppState('result');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate your cosmic reading';
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      });
+      setAppState('input');
+    }
   };
 
   const handleGenerationComplete = () => {
-    setAppState('result');
+    if (!error) {
+      setAppState('result');
+    }
+  };
+
+  const handleBack = () => {
+    reset();
+    setAppState('input');
   };
 
   return (
@@ -61,7 +89,7 @@ const Index = () => {
               </p>
             </motion.div>
 
-            {/* Zodiac Wheel */}
+            {/* Zodiac Wheel - decorative mode */}
             <motion.div
               className="mb-10"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -79,18 +107,26 @@ const Index = () => {
         {appState === 'generating' && (
           <GeneratingState
             key="generating"
+            stage={stage === 'idle' || stage === 'complete' ? 'calculating' : stage}
+            progress={progress}
             onComplete={handleGenerationComplete}
           />
         )}
 
-        {appState === 'result' && (
+        {appState === 'result' && reading && (
           <motion.main
             key="result"
             className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pb-32"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <ResultsView name={birthData?.name || 'Cosmic Traveler'} />
+            <ResultsView 
+              name={reading.birthData.name} 
+              chartData={reading.chartData}
+              musicalMode={reading.musicalMode}
+              audioUrl={reading.audioUrl}
+              onBack={handleBack}
+            />
           </motion.main>
         )}
       </AnimatePresence>
@@ -101,54 +137,96 @@ const Index = () => {
   );
 };
 
-// Simple Results View Component
-const ResultsView = ({ name }: { name: string }) => {
+// Results View Component with real data
+interface ResultsViewProps {
+  name: string;
+  chartData: {
+    planets: Array<{
+      name: string;
+      symbol: string;
+      degree: number;
+      sign: string;
+      signNumber: number;
+      isRetrograde: boolean;
+    }>;
+    sunSign: string;
+    moonSign: string;
+    ascendant: string;
+    source: string;
+  };
+  musicalMode: string;
+  audioUrl?: string;
+  onBack: () => void;
+}
+
+const ResultsView = ({ name, chartData, musicalMode, audioUrl, onBack }: ResultsViewProps) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    if (audioUrl) {
+      audioRef.current = new Audio(audioUrl);
+      
+      audioRef.current.addEventListener('loadedmetadata', () => {
+        setDuration(audioRef.current?.duration || 0);
+      });
+      
+      audioRef.current.addEventListener('timeupdate', () => {
+        setCurrentTime(audioRef.current?.currentTime || 0);
+      });
+      
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      });
+
+      return () => {
+        audioRef.current?.pause();
+        audioRef.current = null;
+      };
+    }
+  }, [audioUrl]);
+
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   return (
     <div className="text-center max-w-md mx-auto">
-      {/* Album art placeholder */}
+      {/* Back button */}
+      <motion.button
+        className="absolute top-6 left-6 text-muted-foreground hover:text-foreground transition-colors"
+        onClick={onBack}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        ← New Reading
+      </motion.button>
+
+      {/* Zodiac wheel with real planetary positions */}
       <motion.div
-        className="w-64 h-64 mx-auto mb-8 rounded-2xl overflow-hidden relative"
+        className="mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-primary/20 to-highlight/30 rounded-2xl" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            className="w-48 h-48 rounded-full border-4 border-primary/40"
-            style={{
-              background: 'radial-gradient(circle, hsla(291, 64%, 55%, 0.4) 0%, hsla(43, 74%, 52%, 0.2) 50%, transparent 70%)',
-            }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-background/80" />
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Floating music notes */}
-        {['♪', '♫', '♩'].map((note, i) => (
-          <motion.span
-            key={i}
-            className="absolute text-3xl text-primary/60"
-            style={{
-              left: `${20 + i * 30}%`,
-              top: '20%',
-            }}
-            animate={{
-              y: [-10, 10, -10],
-              opacity: [0.4, 0.8, 0.4],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: i * 0.5,
-            }}
-          >
-            {note}
-          </motion.span>
-        ))}
+        <ZodiacWheel planets={chartData.planets} animate={false} />
       </motion.div>
 
       {/* Track info */}
@@ -158,14 +236,19 @@ const ResultsView = ({ name }: { name: string }) => {
         transition={{ delay: 0.2 }}
       >
         <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-          Stardust Sonata
+          Cosmic Symphony
         </h2>
         <p className="text-muted-foreground mb-1">
-          Cosmic Symphony for {name}
+          A unique composition for {name}
         </p>
         <p className="text-sm text-primary">
-          Leo Sun • Virgo Moon • D Dorian
+          {chartData.sunSign} Sun • {chartData.moonSign} Moon • {musicalMode}
         </p>
+        {chartData.source === 'approximate' && (
+          <p className="text-xs text-muted-foreground/60 mt-1">
+            (approximate positions)
+          </p>
+        )}
       </motion.div>
 
       {/* Audio controls */}
@@ -180,14 +263,12 @@ const ResultsView = ({ name }: { name: string }) => {
           <div className="h-1 bg-muted rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: '35%' }}
-              transition={{ duration: 1, delay: 0.5 }}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground mt-1">
-            <span>0:53</span>
-            <span>-2:05</span>
+            <span>{formatTime(currentTime)}</span>
+            <span>-{formatTime(Math.max(0, duration - currentTime))}</span>
           </div>
         </div>
       </motion.div>
@@ -199,23 +280,45 @@ const ResultsView = ({ name }: { name: string }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <button className="text-muted-foreground hover:text-foreground transition-colors">
+        <button 
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = Math.max(0, currentTime - 10);
+            }
+          }}
+        >
           <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
             <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
           </svg>
         </button>
 
         <motion.button
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/30"
+          className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/30 disabled:opacity-50"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={togglePlayPause}
+          disabled={!audioUrl}
         >
-          <svg className="w-8 h-8 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
+          {isPlaying ? (
+            <svg className="w-8 h-8 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          ) : (
+            <svg className="w-8 h-8 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
         </motion.button>
 
-        <button className="text-muted-foreground hover:text-foreground transition-colors">
+        <button 
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = Math.min(duration, currentTime + 10);
+            }
+          }}
+        >
           <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
           </svg>

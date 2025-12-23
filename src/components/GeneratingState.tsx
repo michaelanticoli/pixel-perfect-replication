@@ -1,44 +1,69 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
-const loadingMessages = [
-  "Calculating planetary positions...",
-  "Analyzing aspect patterns...",
-  "Mapping harmonics to musical modes...",
-  "Extracting soul frequency...",
-  "Composing your cosmic symphony...",
-  "Tuning celestial instruments...",
-];
+const stageMessages: Record<string, string[]> = {
+  geocoding: [
+    "Locating your birthplace coordinates...",
+    "Mapping celestial alignments...",
+  ],
+  calculating: [
+    "Calculating planetary positions...",
+    "Analyzing aspect patterns...",
+    "Mapping harmonics to musical modes...",
+  ],
+  generating: [
+    "Extracting soul frequency...",
+    "Composing your cosmic symphony...",
+    "Tuning celestial instruments...",
+    "Weaving stellar harmonies...",
+  ],
+};
 
 interface GeneratingStateProps {
   onComplete?: () => void;
+  stage?: 'geocoding' | 'calculating' | 'generating';
+  progress?: number;
 }
 
-export const GeneratingState = ({ onComplete }: GeneratingStateProps) => {
-  const [progress, setProgress] = useState(0);
+export const GeneratingState = ({ onComplete, stage = 'calculating', progress: externalProgress }: GeneratingStateProps) => {
+  const [internalProgress, setInternalProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
 
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          onComplete?.();
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 80);
+  const progress = externalProgress ?? internalProgress;
+  const messages = stageMessages[stage] || stageMessages.calculating;
 
+  useEffect(() => {
+    // Only use internal progress if no external progress is provided
+    if (externalProgress === undefined) {
+      const progressInterval = setInterval(() => {
+        setInternalProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+            onComplete?.();
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 80);
+
+      return () => clearInterval(progressInterval);
+    }
+  }, [onComplete, externalProgress]);
+
+  useEffect(() => {
     const messageInterval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 2500);
 
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(messageInterval);
-    };
-  }, [onComplete]);
+    return () => clearInterval(messageInterval);
+  }, [messages.length]);
+
+  // Trigger onComplete when external progress reaches 100
+  useEffect(() => {
+    if (externalProgress !== undefined && externalProgress >= 100) {
+      onComplete?.();
+    }
+  }, [externalProgress, onComplete]);
 
   return (
     <motion.div
@@ -129,17 +154,19 @@ export const GeneratingState = ({ onComplete }: GeneratingStateProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        Generating
+        {stage === 'geocoding' && 'Locating'}
+        {stage === 'calculating' && 'Calculating'}
+        {stage === 'generating' && 'Generating'}
       </motion.h2>
 
       <motion.p
-        key={messageIndex}
+        key={`${stage}-${messageIndex}`}
         className="text-muted-foreground text-center mb-6 h-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
       >
-        {loadingMessages[messageIndex]}
+        {messages[messageIndex]}
       </motion.p>
 
       {/* Progress bar */}
@@ -152,10 +179,10 @@ export const GeneratingState = ({ onComplete }: GeneratingStateProps) => {
             }}
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.1 }}
+            transition={{ duration: 0.3 }}
           />
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-2">{progress}%</p>
+        <p className="text-center text-sm text-muted-foreground mt-2">{Math.round(progress)}%</p>
       </div>
     </motion.div>
   );
