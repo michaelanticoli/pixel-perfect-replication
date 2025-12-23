@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import type { PlanetPosition } from '@/types/astrology';
 
 const zodiacSigns = [
   { symbol: '♈', name: 'Aries', color: 'hsl(0, 70%, 55%)' },
@@ -15,7 +16,8 @@ const zodiacSigns = [
   { symbol: '♓', name: 'Pisces', color: 'hsl(240, 50%, 60%)' },
 ];
 
-const planetSymbols = [
+// Default decorative planets when no real data
+const defaultPlanets = [
   { symbol: '☉', name: 'Sun', angle: 15, radius: 0.35 },
   { symbol: '☽', name: 'Moon', angle: 95, radius: 0.28 },
   { symbol: '☿', name: 'Mercury', angle: 45, radius: 0.42 },
@@ -25,9 +27,25 @@ const planetSymbols = [
   { symbol: '♄', name: 'Saturn', angle: 320, radius: 0.45 },
 ];
 
-export const ZodiacWheel = () => {
+interface ZodiacWheelProps {
+  planets?: PlanetPosition[];
+  animate?: boolean;
+}
+
+export const ZodiacWheel = ({ planets, animate = true }: ZodiacWheelProps) => {
   const size = 300;
   const center = size / 2;
+
+  // Convert real planet data to display format, or use defaults
+  const displayPlanets = planets 
+    ? planets.map((p, i) => ({
+        symbol: p.symbol,
+        name: p.name,
+        angle: p.degree, // Use actual degree from chart
+        radius: 0.25 + (i * 0.03), // Stagger radii for visibility
+        isRetrograde: p.isRetrograde,
+      }))
+    : defaultPlanets.map(p => ({ ...p, isRetrograde: false }));
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -79,11 +97,11 @@ export const ZodiacWheel = () => {
           strokeWidth="2"
         />
 
-        {/* Outer zodiac ring */}
+        {/* Outer zodiac ring - only animate in decorative mode */}
         <motion.g
-          initial={{ rotate: 0 }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          initial={animate && !planets ? { rotate: 0 } : undefined}
+          animate={animate && !planets ? { rotate: 360 } : undefined}
+          transition={animate && !planets ? { duration: 120, repeat: Infinity, ease: "linear" } : undefined}
           style={{ transformOrigin: 'center' }}
         >
           <circle
@@ -160,35 +178,48 @@ export const ZodiacWheel = () => {
           );
         })}
 
-        {/* Planet positions with animation */}
+        {/* Planet positions - static when real data, animated when decorative */}
         <motion.g
-          initial={{ rotate: 0 }}
-          animate={{ rotate: -360 }}
-          transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+          initial={animate && !planets ? { rotate: 0 } : undefined}
+          animate={animate && !planets ? { rotate: -360 } : undefined}
+          transition={animate && !planets ? { duration: 180, repeat: Infinity, ease: "linear" } : undefined}
           style={{ transformOrigin: 'center' }}
         >
-          {planetSymbols.map((planet) => {
+          {displayPlanets.map((planet, idx) => {
+            // Convert degree to position (0° = right, going counter-clockwise)
             const angle = (planet.angle - 90) * (Math.PI / 180);
             const radius = center * planet.radius;
             const x = center + Math.cos(angle) * radius;
             const y = center + Math.sin(angle) * radius;
 
             return (
-              <motion.text
-                key={planet.name}
-                x={x}
-                y={y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="hsla(43, 74%, 70%, 1)"
-                fontSize="14"
-                filter="url(#glow)"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + Math.random() * 0.5 }}
-              >
-                {planet.symbol}
-              </motion.text>
+              <g key={planet.name}>
+                <motion.text
+                  x={x}
+                  y={y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={planet.isRetrograde ? 'hsla(0, 70%, 60%, 1)' : 'hsla(43, 74%, 70%, 1)'}
+                  fontSize="14"
+                  filter="url(#glow)"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 * idx }}
+                >
+                  {planet.symbol}
+                </motion.text>
+                {/* Retrograde indicator */}
+                {planet.isRetrograde && (
+                  <text
+                    x={x + 8}
+                    y={y - 5}
+                    fontSize="8"
+                    fill="hsla(0, 70%, 60%, 0.8)"
+                  >
+                    ℞
+                  </text>
+                )}
+              </g>
             );
           })}
         </motion.g>
@@ -219,12 +250,36 @@ export const ZodiacWheel = () => {
           </text>
         </motion.g>
 
-        {/* Aspect lines (decorative) */}
-        <g opacity="0.3">
-          <line x1={center + 30} y1={center - 40} x2={center - 50} y2={center + 30} stroke="hsla(186, 95%, 48%, 0.5)" strokeWidth="1" />
-          <line x1={center - 20} y1={center - 50} x2={center + 40} y2={center + 40} stroke="hsla(291, 64%, 55%, 0.5)" strokeWidth="1" />
-          <line x1={center - 40} y1={center + 20} x2={center + 30} y2={center - 30} stroke="hsla(43, 74%, 52%, 0.5)" strokeWidth="1" />
-        </g>
+        {/* Aspect lines - only show when we have real data */}
+        {planets && planets.length > 1 && (
+          <g opacity="0.3">
+            {/* Draw aspect lines between Sun and Moon if both exist */}
+            {(() => {
+              const sun = displayPlanets.find(p => p.name === 'Sun');
+              const moon = displayPlanets.find(p => p.name === 'Moon');
+              if (sun && moon) {
+                const sunAngle = (sun.angle - 90) * (Math.PI / 180);
+                const moonAngle = (moon.angle - 90) * (Math.PI / 180);
+                const sunX = center + Math.cos(sunAngle) * (center * sun.radius);
+                const sunY = center + Math.sin(sunAngle) * (center * sun.radius);
+                const moonX = center + Math.cos(moonAngle) * (center * moon.radius);
+                const moonY = center + Math.sin(moonAngle) * (center * moon.radius);
+                return (
+                  <line
+                    x1={sunX}
+                    y1={sunY}
+                    x2={moonX}
+                    y2={moonY}
+                    stroke="hsla(43, 74%, 52%, 0.5)"
+                    strokeWidth="1"
+                    strokeDasharray="3 3"
+                  />
+                );
+              }
+              return null;
+            })()}
+          </g>
+        )}
       </svg>
 
       {/* Sound wave effect */}
