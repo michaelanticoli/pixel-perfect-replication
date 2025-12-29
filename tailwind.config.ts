@@ -15,7 +15,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Figtree',
   				'ui-sans-serif',
   				'system-ui',
   				'sans-serif',
@@ -30,6 +30,7 @@ export default {
   				'sans-serif'
   			],
   			serif: [
+  				'Crimson Pro',
   				'ui-serif',
   				'Georgia',
   				'Cambria',
@@ -38,6 +39,7 @@ export default {
   				'serif'
   			],
   			mono: [
+  				'Inconsolata',
   				'ui-monospace',
   				'SFMono-Regular',
   				'Menlo',
