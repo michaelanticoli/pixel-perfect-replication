@@ -1,8 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Figtree&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -21,12 +17,12 @@
     --popover-foreground: 210 40% 96%;
 
     /* Celestial Gold Primary */
-    --primary: 132 63% 83%;
+    --primary: 43 74% 52%;
     --primary-foreground: 222 47% 6%;
 
     /* Deep Indigo Secondary */
-    --secondary: 300 48% 78%;
-    --secondary-foreground: 200 63% 72%;
+    --secondary: 255 50% 30%;
+    --secondary-foreground: 210 40% 96%;
 
     /* Muted cosmic */
     --muted: 222 47% 15%;
@@ -49,7 +45,7 @@
     --input: 255 30% 20%;
     --ring: 43 74% 52%;
 
-    --radius: 1.875rem;
+    --radius: 0.75rem;
 
     /* Cosmic Gradients */
     --gradient-cosmic: linear-gradient(135deg, hsl(255 60% 15%) 0%, hsl(222 47% 6%) 50%, hsl(280 50% 12%) 100%);
@@ -77,13 +73,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 255 30% 20%;
     --sidebar-ring: 43 74% 52%;
-    --font-serif: "Crimson Pro", ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
-    --font-mono: Inconsolata, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-    --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-    --shadow-sm: 2px 4px 28.25px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow: 2px 4px 56.5px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow-md: 2px 4px 84.75px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow-lg: 2px 4px 141.25px 1px hsla(0, 0%, 0%, 0.78);
   }
 
   .dark {
@@ -114,14 +103,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 255 30% 20%;
     --sidebar-ring: 43 74% 52%;
-    --font-serif: "Crimson Pro", ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
-    --font-mono: Inconsolata, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-    --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-    --radius: 1.875rem;
-    --shadow-sm: 2px 4px 28.25px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow: 2px 4px 56.5px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow-md: 2px 4px 84.75px 1px hsla(0, 0%, 0%, 0.78);
-    --shadow-lg: 2px 4px 141.25px 1px hsla(0, 0%, 0%, 0.78);
   }
 }
 
