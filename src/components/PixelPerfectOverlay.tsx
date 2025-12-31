@@ -12,26 +12,16 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
   const [showControls, setShowControls] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, onClose]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setReferenceImage(event.target?.result as string);
+      };
+      reader.onerror = () => {
+        console.error('Failed to read file');
+        alert('Failed to load image. Please try another file.');
       };
       reader.readAsDataURL(file);
     }
@@ -82,7 +72,7 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
               <button
                 onClick={onClose}
                 className="text-muted-foreground hover:text-foreground transition-colors"
-                title="Close (Ctrl+P)"
+                title="Close (Ctrl+Shift+P)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -142,7 +132,7 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
             <div className="text-xs text-muted-foreground space-y-1">
               <p>• Upload a reference design image</p>
               <p>• Adjust opacity to compare</p>
-              <p>• Press Ctrl+P to toggle</p>
+              <p>• Press Ctrl+Shift+P to toggle</p>
             </div>
           </motion.div>
         )}

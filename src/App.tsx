@@ -15,7 +15,8 @@ const App = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'p') {
+      // Use Ctrl+Shift+P to avoid conflict with browser print (Ctrl+P)
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
         e.preventDefault();
         setPixelPerfectMode(prev => !prev);
       }
