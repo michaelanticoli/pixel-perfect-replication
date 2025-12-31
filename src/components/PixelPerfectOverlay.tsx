@@ -21,7 +21,7 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
       };
       reader.onerror = () => {
         console.error('Failed to read file');
-        alert('Failed to load image. Please try another file.');
+        alert('Failed to load image. Please ensure the file is a valid image (PNG, JPG, GIF, SVG, etc.) and try again.');
       };
       reader.readAsDataURL(file);
     }
@@ -91,6 +91,7 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
                 accept="image/*"
                 onChange={handleFileChange}
                 className="hidden"
+                aria-label="Upload reference design image"
               />
               <div className="flex gap-2">
                 <button
@@ -124,6 +125,7 @@ export const PixelPerfectOverlay = ({ isOpen, onClose }: PixelPerfectOverlayProp
                   value={opacity}
                   onChange={(e) => setOpacity(parseFloat(e.target.value))}
                   className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                  aria-label="Adjust overlay opacity"
                 />
               </div>
             )}
