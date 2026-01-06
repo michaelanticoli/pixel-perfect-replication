@@ -12,7 +12,7 @@ export interface ChartData {
   sunSign: string;
   moonSign: string;
   ascendant: string;
-  source: 'api' | 'approximate';
+  source: string;
 }
 
 export interface BirthData {
