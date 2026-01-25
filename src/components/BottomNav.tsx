@@ -1,23 +1,27 @@
 import { motion } from 'framer-motion';
-import { Home, CircleDot, Music, ExternalLink } from 'lucide-react';
+import { Home, CircleDot, Music, ExternalLink, Info } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
   icon: React.ElementType;
   label: string;
-  active?: boolean;
   href?: string;
   external?: boolean;
+  path?: string;
 }
 
 const navItems: NavItem[] = [
-  { icon: Home, label: 'Home', active: false },
-  { icon: CircleDot, label: 'Chart', active: true },
-  { icon: Music, label: 'Music', active: false },
+  { icon: Home, label: 'Home', path: '/' },
+  { icon: Info, label: 'About', path: '/about' },
+  { icon: CircleDot, label: 'Chart', path: '/explore' },
   { icon: ExternalLink, label: 'Pitch', href: 'https://quantumelodics.vercel.app', external: true },
 ];
 
 export const BottomNav = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   return (
     <motion.nav
       className="fixed bottom-0 left-0 right-0 z-50"
@@ -30,23 +34,40 @@ export const BottomNav = () => {
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const Component = item.external ? 'a' : 'button';
-              const externalProps = item.external ? { href: item.href, target: '_blank', rel: 'noopener noreferrer' } : {};
+              const isActive = item.path ? location.pathname === item.path : false;
+              
+              if (item.external) {
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 px-5 py-2 rounded-xl transition-all duration-500",
+                      "text-muted-foreground/60 hover:text-muted-foreground hover:text-primary/80"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                    <span className="text-[10px] tracking-widest uppercase">{item.label}</span>
+                  </a>
+                );
+              }
               
               return (
-                <Component
+                <button
                   key={item.label}
-                  {...externalProps}
+                  onClick={() => item.path && navigate(item.path)}
                   className={cn(
                     "flex flex-col items-center gap-1.5 px-5 py-2 rounded-xl transition-all duration-500",
-                    item.active
+                    isActive
                       ? "text-primary"
                       : "text-muted-foreground/60 hover:text-muted-foreground hover:text-primary/80"
                   )}
                 >
                   <div className="relative">
                     <Icon className="w-5 h-5" strokeWidth={1.5} />
-                    {item.active && (
+                    {isActive && (
                       <motion.div
                         className="absolute -bottom-2 left-1/2 w-4 h-px bg-primary/60"
                         layoutId="activeIndicator"
@@ -55,7 +76,7 @@ export const BottomNav = () => {
                     )}
                   </div>
                   <span className="text-[10px] tracking-widest uppercase">{item.label}</span>
-                </Component>
+                </button>
               );
             })}
           </div>
