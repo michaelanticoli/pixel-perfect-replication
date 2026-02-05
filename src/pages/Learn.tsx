@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BottomNav } from '@/components/BottomNav';
 import { useNavigate } from 'react-router-dom';
+import { BookOpen, BarChart3, ExternalLink } from 'lucide-react';
 
 const Learn = () => {
   const navigate = useNavigate();
@@ -29,10 +30,41 @@ const Learn = () => {
             ‹ Back
           </motion.button>
           <h1 className="font-display text-lg text-gold-gradient tracking-wide">
-            Quantum Vibrations
+            Learning Center
           </h1>
           <div className="w-12" /> {/* Spacer for centering */}
         </motion.header>
+
+        {/* Resource Cards */}
+        <motion.div
+          className="px-4 mb-4 grid grid-cols-2 gap-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="glass rounded-xl p-4 border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span className="text-xs text-primary font-medium">Active</span>
+            </div>
+            <h3 className="text-sm text-foreground font-medium">Mini Course</h3>
+            <p className="text-xs text-muted-foreground mt-1">Interactive lessons</p>
+          </div>
+          
+          <a
+            href="https://agent-69760f0deef6ca7076f--quantumelodic-volumes.netlify.app/#stats"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass rounded-xl p-4 border border-border/20 hover:border-accent/40 transition-all duration-300 group"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="w-4 h-4 text-accent" />
+              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h3 className="text-sm text-foreground font-medium">Volumes Archive</h3>
+            <p className="text-xs text-muted-foreground mt-1">Research & stats</p>
+          </a>
+        </motion.div>
 
         {/* Full-screen iframe container */}
         <motion.div

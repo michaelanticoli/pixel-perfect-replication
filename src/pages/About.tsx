@@ -218,11 +218,54 @@ const About = () => {
             </div>
           </motion.section>
 
-          {/* Mini Course Section */}
+          {/* Satellite Resources */}
           <motion.section
             className="glass rounded-2xl p-8 mb-8 border border-border/20"
             {...fadeInUp}
             transition={{ delay: 0.7 }}
+          >
+            <h2 className="font-display text-xl text-primary mb-4 tracking-wide">
+              Explore Further
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <a
+                href="https://agent-69760f0deef6ca7076f--quantumelodic-volumes.netlify.app/#stats"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass rounded-xl p-5 border border-border/20 hover:border-accent/40 transition-all duration-300 group"
+              >
+                <h3 className="text-foreground font-medium mb-2 flex items-center gap-2">
+                  <span className="text-accent">📊</span> Quantumelodic Volumes
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Dive into the research archive — stats, harmonic data, and volume explorations.
+                </p>
+                <span className="text-xs text-primary/70 mt-3 block group-hover:text-primary transition-colors">
+                  Open Archive →
+                </span>
+              </a>
+              <div
+                className="glass rounded-xl p-5 border border-primary/20 bg-primary/5 cursor-pointer"
+                onClick={() => navigate('/learn')}
+              >
+                <h3 className="text-foreground font-medium mb-2 flex items-center gap-2">
+                  <span className="text-primary">🎓</span> Quantum Vibrations Course
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Interactive mini-course harmonizing astrology, music, and the resonant mind.
+                </p>
+                <span className="text-xs text-primary/70 mt-3 block">
+                  Start Learning →
+                </span>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Mini Course Section */}
+          <motion.section
+            className="glass rounded-2xl p-8 mb-8 border border-border/20"
+            {...fadeInUp}
+            transition={{ delay: 0.8 }}
           >
             <h2 className="font-display text-xl text-primary mb-4 tracking-wide">
               Dive Deeper: Mini Course
