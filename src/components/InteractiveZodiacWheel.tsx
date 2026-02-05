@@ -84,6 +84,32 @@ export const InteractiveZodiacWheel = ({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+
+        {/* Intense glow filter for selected */}
+        <filter id="glow-intense" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        {/* Planet pulse animation filter */}
+        <filter id="glow-pulse" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur">
+            <animate 
+              attributeName="stdDeviation" 
+              values="3;6;3" 
+              dur="2s" 
+              repeatCount="indefinite" 
+            />
+          </feGaussianBlur>
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
         
         {/* Gradient for outer ring */}
         <linearGradient id="ring-gradient-int" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -91,6 +117,13 @@ export const InteractiveZodiacWheel = ({
           <stop offset="50%" stopColor="hsl(222, 47%, 15%)" />
           <stop offset="100%" stopColor="hsl(280, 40%, 25%)" />
         </linearGradient>
+
+        {/* Radial gradient for planet glow */}
+        <radialGradient id="planet-glow-grad">
+          <stop offset="0%" stopColor="hsl(43, 74%, 52%)" stopOpacity="0.6" />
+          <stop offset="50%" stopColor="hsl(43, 74%, 52%)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="hsl(43, 74%, 52%)" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {/* Background */}
@@ -214,17 +247,85 @@ export const InteractiveZodiacWheel = ({
         );
       })}
 
-      {/* Planet symbols */}
+      {/* Planet symbols with animations */}
       {planetPositions.map(({ planet, x, y }) => {
         const isSelected = selectedPlanet?.name === planet.name;
         const isAscendant = planet.name === 'Ascendant';
+        const baseRadius = isAscendant ? 16 : 20;
 
         return (
           <g key={planet.name}>
+            {/* Frequency wave ripples - animated circles emanating from planet */}
+            {!isAscendant && (
+              <>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={baseRadius}
+                  fill="none"
+                  stroke="hsl(43, 74%, 52%)"
+                  strokeWidth="1"
+                  opacity="0"
+                >
+                  <animate
+                    attributeName="r"
+                    from={baseRadius}
+                    to={baseRadius + 25}
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    from="0.5"
+                    to="0"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={baseRadius}
+                  fill="none"
+                  stroke="hsl(43, 74%, 52%)"
+                  strokeWidth="1"
+                  opacity="0"
+                >
+                  <animate
+                    attributeName="r"
+                    from={baseRadius}
+                    to={baseRadius + 25}
+                    dur="3s"
+                    begin="1s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    from="0.4"
+                    to="0"
+                    dur="3s"
+                    begin="1s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </>
+            )}
+
+            {/* Outer glow aura */}
+            <circle
+              cx={x}
+              cy={y}
+              r={baseRadius + 8}
+              fill="url(#planet-glow-grad)"
+              opacity={isSelected ? 0.8 : 0.3}
+              filter="url(#glow-pulse)"
+            />
+
+            {/* Main planet circle */}
             <motion.circle
               cx={x}
               cy={y}
-              r={isAscendant ? 16 : 20}
+              r={baseRadius}
               fill={isSelected ? 'hsl(43, 74%, 52%)' : 'hsl(222, 47%, 12%)'}
               stroke={isSelected ? 'hsl(43, 74%, 60%)' : 'hsl(43, 74%, 52%)'}
               strokeWidth={isSelected ? 2 : 1}
@@ -234,7 +335,7 @@ export const InteractiveZodiacWheel = ({
               onMouseLeave={() => onPlanetHover(null)}
               whileHover={{ scale: 1.2, fill: 'hsl(43, 74%, 25%)' }}
               whileTap={{ scale: 0.95 }}
-              filter={isSelected ? 'url(#glow-interactive)' : undefined}
+              filter={isSelected ? 'url(#glow-intense)' : undefined}
             />
             <text
               x={x}
@@ -263,14 +364,27 @@ export const InteractiveZodiacWheel = ({
         );
       })}
 
-      {/* Center point */}
+      {/* Center point with pulse */}
       <circle
         cx={center}
         cy={center}
         r={4}
         fill="hsl(43, 74%, 52%)"
         opacity="0.8"
-      />
+      >
+        <animate
+          attributeName="r"
+          values="3;5;3"
+          dur="2s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.6;1;0.6"
+          dur="2s"
+          repeatCount="indefinite"
+        />
+      </circle>
     </svg>
   );
 };

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Volume2, VolumeX } from 'lucide-react';
 import type { ComputedAspect } from '@/types/quantumMelodic';
 import { Button } from '@/components/ui/button';
+import { aspectMusicalData, getOrbPrecision } from '@/utils/harmonicWisdom';
 
 interface Props {
   aspect: ComputedAspect;
@@ -18,6 +19,19 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { aspectType, planet1, planet2, exactAngle, orb } = aspect;
+
+  // Get rich musical data
+  const musicalInfo = aspectMusicalData[aspectType.name] || {
+    type: 'Unique Harmonic',
+    feel: 'Complex Resonance',
+    music: 'a rare interval',
+    energy: 'Every angle creates its own unique frequency relationship.',
+    resolve: 'Study the geometry. The closer to consonant intervals (0°, 60°, 120°), the more harmonious.',
+    isConsonant: false,
+    isDissonant: false,
+  };
+
+  const orbInfo = getOrbPrecision(orb);
 
   // Clean up audio on unmount
   useEffect(() => {
@@ -41,7 +55,6 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
     setIsLoading(true);
 
     try {
-      // Generate a sound effect that represents this aspect
       const prompt = `Short ${aspectType.sonic_expression} musical phrase, ${aspectType.harmonic_interval} interval, ${aspectType.consonance}, ${aspectType.musical_effect}, 3 seconds, ambient electronic`;
 
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-aspect-sound`, {
@@ -111,7 +124,7 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
 
       {/* Panel */}
       <motion.div
-        className="relative z-10 w-full max-w-lg max-h-[80vh] overflow-y-auto glass-strong rounded-t-3xl sm:rounded-2xl mx-4 mb-0 sm:mb-4"
+        className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-y-auto glass-strong rounded-t-3xl sm:rounded-2xl mx-4 mb-0 sm:mb-4"
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
@@ -131,7 +144,7 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
                 {aspectType.name}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {planet1} · {planet2}
+                {planet1} ↔ {planet2}
               </p>
             </div>
           </div>
@@ -144,6 +157,21 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Musical Quality Badge - NEW */}
+          <div className="flex items-center justify-center gap-3">
+            <span 
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                musicalInfo.isConsonant 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : musicalInfo.isDissonant 
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-muted/30 text-muted-foreground border border-border/30'
+              }`}
+            >
+              {musicalInfo.isConsonant ? '◈ Consonant Harmony' : musicalInfo.isDissonant ? '◇ Dynamic Tension' : '○ Unique Resonance'}
+            </span>
+          </div>
+
           {/* Aspect Metrics */}
           <section className="grid grid-cols-3 gap-3">
             <div className="glass rounded-xl p-4 text-center">
@@ -160,6 +188,34 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
             </div>
           </section>
 
+          {/* Orb Precision - NEW */}
+          <section className="p-4 rounded-xl bg-primary/5 border-l-2 border-primary/50">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs uppercase tracking-wide text-primary/80">Orb Precision</p>
+              <span className={`text-sm font-medium ${
+                orb < 1 ? 'text-green-400' : orb < 3 ? 'text-highlight' : orb < 6 ? 'text-amber-400' : 'text-muted-foreground'
+              }`}>
+                {orbInfo.label}
+              </span>
+            </div>
+            <p className="text-sm text-foreground/90 italic">
+              {orbInfo.intensity} The closer to exact (0°), the louder and clearer the harmonic ring.
+            </p>
+          </section>
+
+          {/* Musical Type - NEW */}
+          <section>
+            <h3 className="text-xs uppercase tracking-widest text-highlight mb-3">
+              Musical Quality · {musicalInfo.type}
+            </h3>
+            <div className="p-4 rounded-xl bg-highlight/5 border-l-2 border-highlight/50">
+              <p className="text-sm text-foreground/90">
+                Like <span className="italic text-highlight">{musicalInfo.music}</span>, this aspect creates{' '}
+                <span className="font-medium">{musicalInfo.feel.toLowerCase()}</span>.
+              </p>
+            </div>
+          </section>
+
           {/* Tension Level */}
           <section>
             <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
@@ -168,6 +224,36 @@ export const AspectDetailPanel = ({ aspect, onClose }: Props) => {
             <div className="flex items-center gap-2">
               {tensionBars}
               <span className="ml-2 text-sm text-foreground">{aspectType.consonance}</span>
+            </div>
+          </section>
+
+          {/* Energetic Truth - NEW */}
+          <section>
+            <h3 className="text-xs uppercase tracking-widest text-accent mb-3">
+              Energetic Truth
+            </h3>
+            <div className="p-4 rounded-xl bg-accent/5 border-l-2 border-accent/50">
+              <p className="text-sm text-foreground/90 leading-relaxed">
+                {musicalInfo.energy}
+              </p>
+            </div>
+          </section>
+
+          {/* Resolution Guidance - NEW (only for dissonant aspects) */}
+          <section>
+            <h3 className={`text-xs uppercase tracking-widest mb-3 ${
+              musicalInfo.isDissonant ? 'text-amber-400' : 'text-green-400'
+            }`}>
+              {musicalInfo.isDissonant ? 'Resolution Pathway' : 'Working With This Energy'}
+            </h3>
+            <div className={`p-4 rounded-xl border-l-2 ${
+              musicalInfo.isDissonant 
+                ? 'bg-amber-500/5 border-amber-500/50' 
+                : 'bg-green-500/5 border-green-500/50'
+            }`}>
+              <p className="text-sm text-foreground/90 leading-relaxed">
+                {musicalInfo.resolve}
+              </p>
             </div>
           </section>
 
