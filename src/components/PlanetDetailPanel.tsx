@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { QMPlanet, QMSign, QMHouse } from '@/types/quantumMelodic';
 import type { PlanetPosition } from '@/types/astrology';
+import { elementInfo, qualityInfo, getFrequencyCategory, houseWisdom } from '@/utils/harmonicWisdom';
 
 interface EnrichedPlanet {
   position: PlanetPosition;
@@ -25,6 +26,11 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
     const minutes = Math.floor((signDegree - degrees) * 60);
     return `${degrees}°${minutes}'`;
   };
+
+  const freqInfo = qmData ? getFrequencyCategory(qmData.frequency_hz) : null;
+  const elemInfo = signData?.element ? elementInfo[signData.element] : null;
+  const qualInfo = signData?.modality ? qualityInfo[signData.modality] : null;
+  const houseWisdomInfo = houseWisdom[houseNumber];
 
   return (
     <motion.div
@@ -82,13 +88,27 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="glass rounded-xl p-4">
                   <p className="text-2xl font-light text-foreground">{qmData.frequency_hz} Hz</p>
-                  <p className="text-xs text-muted-foreground mt-1">Frequency</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {freqInfo?.category} Resonance
+                  </p>
                 </div>
                 <div className="glass rounded-xl p-4">
                   <p className="text-2xl font-light text-foreground">{qmData.note}</p>
                   <p className="text-xs text-muted-foreground mt-1">Note · Octave {qmData.octave}</p>
                 </div>
               </div>
+              
+              {/* Harmonic Nature - NEW */}
+              {freqInfo && (
+                <div className="mt-4 p-4 rounded-xl bg-primary/5 border-l-2 border-primary/50">
+                  <p className="text-xs uppercase tracking-wide text-primary/80 mb-2">Harmonic Nature</p>
+                  <p className="text-sm text-foreground/90 italic">
+                    This frequency carries {freqInfo.resonance} energy. Like a note in the cosmic symphony, 
+                    it seeks to harmonize with other planetary frequencies.
+                  </p>
+                </div>
+              )}
+
               <div className="mt-4 space-y-3">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Instrument</p>
@@ -120,7 +140,7 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
             </section>
           )}
 
-          {/* Sign Expression */}
+          {/* Sign Expression - Enhanced */}
           {signData && (
             <section>
               <h3 className="text-xs uppercase tracking-widest text-highlight mb-3">
@@ -128,18 +148,44 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
               </h3>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="glass rounded-lg p-3 text-center">
-                  <p className="text-lg text-foreground">{signData.element}</p>
+                  <p className="text-lg text-foreground">{elemInfo?.symbol || signData.element}</p>
+                  <p className="text-sm text-foreground">{signData.element}</p>
                   <p className="text-xs text-muted-foreground">Element</p>
                 </div>
                 <div className="glass rounded-lg p-3 text-center">
                   <p className="text-lg text-foreground">{signData.modality}</p>
-                  <p className="text-xs text-muted-foreground">Modality</p>
+                  <p className="text-xs text-muted-foreground mt-1">Modality</p>
                 </div>
                 <div className="glass rounded-lg p-3 text-center">
                   <p className="text-lg text-foreground">{signData.tempo_bpm}</p>
-                  <p className="text-xs text-muted-foreground">BPM</p>
+                  <p className="text-xs text-muted-foreground mt-1">BPM</p>
                 </div>
               </div>
+
+              {/* Elemental Resonance - NEW */}
+              {elemInfo && (
+                <div className="p-4 rounded-xl bg-highlight/5 border-l-2 border-highlight/50 mb-4">
+                  <p className="text-xs uppercase tracking-wide text-highlight/80 mb-2">
+                    {elemInfo.symbol} Elemental Resonance
+                  </p>
+                  <p className="text-sm text-foreground/90">
+                    <span className="text-foreground font-medium">{signData.element}</span> energy creates{' '}
+                    <span className="italic">{elemInfo.color}</span>, vibrating with {elemInfo.sound}. 
+                    Think of it as the timbre of this planetary instrument—same note, different voice.
+                  </p>
+                </div>
+              )}
+
+              {/* Quality Rhythm - NEW */}
+              {qualInfo && (
+                <div className="p-4 rounded-xl bg-accent/5 border-l-2 border-accent/50 mb-4">
+                  <p className="text-xs uppercase tracking-wide text-accent/80 mb-2">Quality Rhythm</p>
+                  <p className="text-sm text-foreground/90">
+                    <span className="text-foreground font-medium">{qualInfo.action}</span> — {qualInfo.rhythm}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Musical Mode</p>
@@ -161,12 +207,25 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
             </section>
           )}
 
-          {/* House Placement */}
+          {/* House Placement - Enhanced */}
           {houseData && (
             <section>
               <h3 className="text-xs uppercase tracking-widest text-secondary-foreground mb-3">
                 House {houseNumber} · {houseData.name}
               </h3>
+              
+              {/* House Harmonic Wisdom - NEW */}
+              {houseWisdomInfo && (
+                <div className="p-4 rounded-xl bg-secondary/10 border-l-2 border-secondary/50 mb-4">
+                  <p className="text-xs uppercase tracking-wide text-secondary-foreground/80 mb-2">
+                    {houseWisdomInfo.octave} · Harmonic Wisdom
+                  </p>
+                  <p className="text-sm text-foreground/90 italic">
+                    {houseWisdomInfo.wisdom}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Life Domain</p>
@@ -184,6 +243,14 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Musical Expression</p>
                   <p className="text-foreground/80 text-sm italic">{houseData.expression}</p>
                 </div>
+              </div>
+
+              {/* Houses as Resonance Chambers - NEW */}
+              <div className="mt-4 p-3 rounded-lg bg-muted/20">
+                <p className="text-xs text-muted-foreground italic">
+                  Houses are resonance chambers in the cosmic instrument. Planets passing through 
+                  create different tones depending on which chamber they occupy.
+                </p>
               </div>
             </section>
           )}
