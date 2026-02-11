@@ -1,8 +1,13 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Volume2, VolumeX } from 'lucide-react';
 import type { QMPlanet, QMSign, QMHouse } from '@/types/quantumMelodic';
 import type { PlanetPosition } from '@/types/astrology';
 import { elementInfo, qualityInfo, getFrequencyCategory, houseWisdom } from '@/utils/harmonicWisdom';
+import { Button } from '@/components/ui/button';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 interface EnrichedPlanet {
   position: PlanetPosition;
@@ -19,6 +24,9 @@ interface Props {
 
 export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
   const { position, qmData, signData, houseData, houseNumber } = planet;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const formatDegree = (deg: number): string => {
     const signDegree = deg % 30;
@@ -31,6 +39,68 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
   const elemInfo = signData?.element ? elementInfo[signData.element] : null;
   const qualInfo = signData?.modality ? qualityInfo[signData.modality] : null;
   const houseWisdomInfo = houseWisdom[houseNumber];
+
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const playPlanetSound = async () => {
+    if (isLoading) return;
+
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const prompt = `${qmData?.frequency_hz || 220}Hz ${qmData?.timbre || 'warm'} tone, ${qmData?.instrument || 'synthesizer'}, ${qmData?.harmonic_quality || 'resonant'}, ${signData?.emotional_quality || 'ethereal'}, ambient space music, 4 seconds`;
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-planet-sound`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({
+          planetName: position.name,
+          prompt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate sound');
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('audio/')) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        audioRef.current = new Audio(url);
+        audioRef.current.play();
+        setIsPlaying(true);
+
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(url);
+        };
+      }
+    } catch (err) {
+      console.error('Error playing planet sound:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -254,7 +324,39 @@ export const PlanetDetailPanel = ({ planet, onClose }: Props) => {
               </div>
             </section>
           )}
-        </div>
+
+              {/* Play Sound Button */}
+              <section className="pt-2">
+                <Button
+                  variant="cosmic"
+                  size="lg"
+                  className="w-full"
+                  onClick={playPlanetSound}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-5 h-5 border border-primary-foreground border-t-transparent rounded-full"
+                    />
+                  ) : isPlaying ? (
+                    <>
+                      <VolumeX className="w-4 h-4 mr-2" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-4 h-4 mr-2" />
+                      Hear This Planet
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground/60 mt-2">
+                  Experience the sonic signature of {position.name} at {qmData?.frequency_hz || '—'} Hz
+                </p>
+              </section>
+            </div>
       </motion.div>
     </motion.div>
   );
