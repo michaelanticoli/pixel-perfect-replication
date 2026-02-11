@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-aspect-sound]
 verify_jwt = false
+
+[functions.generate-planet-sound]
+verify_jwt = false
