@@ -122,8 +122,8 @@ serve(async (req) => {
     if (!response.ok) {
       console.error('ElevenLabs SFX error:', response.status);
 
-      // Handle rate limiting gracefully
-      if (response.status === 429 || response.status === 402) {
+      // Handle auth errors, rate limiting, and billing gracefully
+      if (response.status === 401 || response.status === 429 || response.status === 402) {
         return new Response(
           JSON.stringify({ 
             error: 'Sound generation temporarily unavailable',
